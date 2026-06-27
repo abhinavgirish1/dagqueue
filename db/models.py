@@ -22,6 +22,15 @@ class Task:
         return tasks
     
     @staticmethod
+    def get_dependencies(task_id):
+        con = get_connection()
+        cur = con.cursor()
+        cur.execute("SELECT * FROM dependencies WHERE task_id = ?", (task_id,))
+        dependencies = cur.fetchall()
+        con.close()
+        return dependencies
+    
+    @staticmethod
     def get_by_id(task_id):
         con = get_connection()
         cur = con.cursor()
@@ -35,5 +44,13 @@ class Task:
         con = get_connection()
         cur = con.cursor()
         cur.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        con.commit()
+        con.close()
+        
+    @staticmethod
+    def update_status(task_id, status):
+        con = get_connection()
+        cur = con.cursor()
+        cur.execute("UPDATE tasks SET status = ? WHERE id = ?", (status, task_id))
         con.commit()
         con.close()

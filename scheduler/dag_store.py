@@ -1,8 +1,12 @@
 from db.database import get_connection
+from scheduler.dag_validator import has_cycle
 
 #stores the dag in the database by inserting the tasks and dependencies into the database
 
 def store_dag(dag_id: str, tasks: list[str], edges: list[list[str]]):
+    if has_cycle(tasks, edges):
+        raise ValueError(f"DAG '{dag_id}' has a cycle")
+
     con = get_connection()
     cur = con.cursor()
 
