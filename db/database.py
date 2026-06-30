@@ -1,8 +1,11 @@
 import sqlite3
-
+from pathlib import Path
 # Establishing and returning a connection to the SQLite database.
-def get_connection(db_name="db/tutorial.db"):
-    return sqlite3.connect(db_name)
+
+
+DB_PATH = Path(__file__).parent / "dagqueue.db"
+def get_connection():
+    return sqlite3.connect(DB_PATH)
 
 def init():
     # Initializing the database by creating the required tables if they do not already exist.

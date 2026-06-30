@@ -40,6 +40,15 @@ class Task:
         return task
     
     @staticmethod
+    def get_by_dag(dag_id):
+        con = get_connection()
+        cur = con.cursor()
+        cur.execute("SELECT * FROM tasks WHERE dag_id = ?", (dag_id,))
+        tasks = cur.fetchall()
+        con.close()
+        return tasks
+    
+    @staticmethod
     def delete(task_id):
         con = get_connection()
         cur = con.cursor()

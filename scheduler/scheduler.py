@@ -4,42 +4,34 @@ import time
 #returns a list of task names that are ready to run
 
 def get_ready_tasks(dag_id: str) -> list[str]:
+    tasks = Task.get_by_dag(dag_id)
+    status_by_id = {task[0]: task[3] for task in tasks}
+
     ready_tasks = []
-    tasks = Task.get_all()
     for task in tasks:
-        if task[1] == dag_id and task[3] == "pending":
-            dependencies = Task.get_dependencies(task[0])
-            count = 0
-            if len(dependencies) == 0:
-                ready_tasks.append(task[2])
-                continue
-            for dependency in dependencies:
-                dep_id = dependency[2]
-                dep_task = Task.get_by_id(dep_id)
-                if dep_task[3] != "success":
-                    continue
-                count += 1
-            if count == len(dependencies):
-                ready_tasks.append(task[2])
+        if task[3] != "pending":
+            continue
+        deps = Task.get_dependencies(task[0])
+        if all(status_by_id.get(dep[2]) == "success" for dep in deps):
+            ready_tasks.append(task[2])
+
     return ready_tasks
 
 
 def run_loop(dag_id: str, worker):
     while True:
         ready_tasks = get_ready_tasks(dag_id)
-        if len(ready_tasks) == 0:
-            tasks = Task.get_all()
-            if any(t[1] == dag_id and t[3] in ("pending", "running") for t in tasks):
+        if not ready_tasks:
+            tasks = Task.get_by_dag(dag_id)
+            if any(t[3] in ("pending", "running") for t in tasks):
                 time.sleep(5)
                 continue
             break
 
+        tasks_by_name = {t[2]: t for t in Task.get_by_dag(dag_id)}
         for task_name in ready_tasks:
-            task_row = next(
-                t for t in Task.get_all()
-                if t[1] == dag_id and t[2] == task_name
-            )
-            Task.update_status(task_row[0], "running")
-            worker.submit(task_name)
+            task_id = tasks_by_name[task_name][0]
+            Task.update_status(task_id, "running")
+            worker.submit(task_id, task_name)
 
         time.sleep(5)

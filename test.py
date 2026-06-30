@@ -1,7 +1,5 @@
 """Smoke tests for database and DAG modules. Run with: python test.py"""
 
-import os
-
 from db.database import init
 from db.models import Task
 from scheduler.dag_store import store_dag
@@ -10,8 +8,9 @@ from scheduler.scheduler import get_ready_tasks, run_loop
 
 
 def reset_db():
-    if os.path.exists("db/tutorial.db"):
-        os.remove("db/tutorial.db")
+    from db.database import DB_PATH
+    if DB_PATH.exists():
+        DB_PATH.unlink()
     init()
 
 
